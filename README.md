@@ -11,6 +11,7 @@ Using sample from VerbalExpressions homepage https://github.com/VerbalExpression
 ### Setup expressions
 
 ```java
+
 String logLine = "3\t4\t1\thttp://localhost:20001\t1\t63528800\t0\t63528800\t1000000000\t0\t63528800\tSTR1";
 
 VerbalExpression.Builder digits = regex().capt().digit().oneOrMore().endCapt();
@@ -31,6 +32,7 @@ VerbalExpression.Builder host = regex()
 ### Setup parser and parse
 
 ```java
+
 Parser parser = Parser.builder()
                 .withTabSeparation()
                 .extract(digits).skip()
@@ -56,15 +58,15 @@ System.out.println(parser.parse(logLine));
 ```json
 
 {
-"digit2":4,
-"digit4":63528800,
-"digit5":63528800,
-"digit6":1000000000,
-"host":"http://localhost:20001",
-"range2":1,
-"range3":0,
-"range4":0,
-"str":"STR1"
+    "digit2":4,
+    "digit4":63528800,
+    "digit5":63528800,
+    "digit6":1000000000,
+    "host":"http://localhost:20001",
+    "range2":1,
+    "range3":0,
+    "range4":0,
+    "str":"STR1"
 }
 
 ```
