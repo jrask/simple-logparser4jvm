@@ -4,7 +4,7 @@ Log parsing can be a pain, you have to really understand regex (not only write t
 if patterns exist. I recently found VerbalExpressions ( https://github.com/VerbalExpressions ) which are really nice
 to write regex that are easy to understand and modify (if you are careful...).
 
-*This library uses regex, grok and VerbalExpression to create a log/text parser that is should be simple to work with and
+*This library uses regex, grok and VerbalExpression to create a log/text parser that should be simple to work with and
 you can mix regex(string), grok patterns & VerbalExpressions to combine a single pattern.*
 
 
