@@ -1,4 +1,4 @@
-# Log parsing made easy
+# Log parsing made simple
 
 Log parsing can be a pain, you have to really understand regex (not only write them...), grok can be really useful
 if patterns exist. I recently found VerbalExpressions ( https://github.com/VerbalExpressions ) which are really nice

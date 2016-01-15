@@ -1,10 +1,13 @@
 package jrask;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import oi.thekraken.grok.api.Grok;
 import oi.thekraken.grok.api.Match;
 import oi.thekraken.grok.api.exception.GrokException;
 import ru.lanwen.verbalregex.VerbalExpression;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +34,8 @@ public class Parser {
 
     private final Grok grok;
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private Parser(Grok grok) {
         this.grok = grok;
     }
@@ -43,11 +48,24 @@ public class Parser {
         return new Builder(grok);
     }
 
-    // Consider using jackson
-    public String parseAsJson(String text) {
+    public JsonNode parseAsJsonNode(String text) {
         Match match = grok.match(text);
         match.captures();
-        return match.toJson();
+        try {
+            return MAPPER.readTree(match.toJson());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String parseAsJson(String text, boolean pretty) {
+        Match match = grok.match(text);
+        match.captures();
+        return match.toJson(pretty);
+    }
+
+    public String parseAsJson(String text) {
+        return parseAsJson(text, false);
     }
 
     public Map<String, Object> parseAsMap(String text) {

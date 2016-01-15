@@ -40,7 +40,7 @@ public class ParserTest {
                 .extract(host).into("host")
                 .build();
 
-        System.out.println(parser.parseAsJson(logLine));
+        System.out.println(parser.parseAsJsonNode(logLine));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class ParserTest {
                 .extract(str).into("str")
                 .build();
 
-        System.out.println(parser.parseAsJson(logLine));
+        System.out.println(parser.parseAsJsonNode(logLine));
 
         String expected = "{\"digit1\":3,\"digit2\":4,\"digit4\":63528800,\"digit5\":63528800,\"digit6\":1000000000," +
                 "\"host\":\"http://localhost:20001\",\"range1\":1,\"range2\":1,\"range3\":0,\"range4\":0,\"str\":\"STR1\"}";
