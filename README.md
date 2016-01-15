@@ -20,7 +20,6 @@ String logLine = "3\t4\t1\thttp://localhost:20001\t1\t63528800\t0\t63528800\t100
 // Setup expressions
 
 VerbalExpression.Builder digits = regex().capt().digit().oneOrMore().endCapt();
-VerbalExpression.Builder tab = regex().capt().tab();
 VerbalExpression.Builder range = regex().capt().range("0", "1").count(1).endCapt();
 
 // Create a grok instance IF you want to use any predefined patterns
