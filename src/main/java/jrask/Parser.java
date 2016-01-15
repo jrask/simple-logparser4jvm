@@ -7,12 +7,26 @@ import ru.lanwen.verbalregex.VerbalExpression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.String.format;
 
 import static ru.lanwen.verbalregex.VerbalExpression.regex;
 
+/**
+ *
+ * Wraps construction of GROK patterns in an easy to use builder.
+ *
+ * Use when you cannot find the GROK patterns you are looking for and/or you suck
+ * at regex and/or you want your regex + grok patterns to understandable.
+ *
+ * Combines VerbalExpressions, String regex and GROK patterns so you can mix and match
+ * in the way that works for you.
+ *
+ * @author Johan Rask
+ *
+ */
 public class Parser {
 
     private final Grok grok;
@@ -29,10 +43,17 @@ public class Parser {
         return new Builder(grok);
     }
 
-    public String parse(String logLine) {
-        Match match = grok.match(logLine);
+    // Consider using jackson
+    public String parseAsJson(String text) {
+        Match match = grok.match(text);
         match.captures();
         return match.toJson();
+    }
+
+    public Map<String, Object> parseAsMap(String text) {
+        Match match = grok.match(text);
+        match.captures();
+        return match.toMap();
     }
 
     public static class Builder {
@@ -52,23 +73,64 @@ public class Parser {
             return field;
         }
 
+        public Builder skip(VerbalExpression.Builder regex) {
+            Field field = new Field(regex.build().toString());
+            fields.add(field);
+            return field.skip();
+        }
+
         public Field extract(String regex) {
             Field field = new Field(regex);
             fields.add(field);
             return field;
         }
 
+        public Builder grok(String s) {
+            return extract(s).into(null);
+        }
+
+        public Builder skip(String regex) {
+            Field field = new Field(regex);
+            fields.add(field);
+            return field.skip();
+        }
+
+        public Builder tab() {
+            return skip(regex().tab());
+        }
+
+        public Builder space() {
+            return skip(regex().space());
+        }
+
+
+        public Builder withTabSeparation() {
+            this.tabSeparated = true;
+            return this;
+        }
+
+        public Builder withSpaceSeparation() {
+            this.spaceSeparated = true;
+            return this;
+        }
+
         public Parser build() {
+            return build(false);
+        }
+
+        public Parser build(boolean uglyDebug) {
             StringBuilder grokPatternBuilder = new StringBuilder();
             final AtomicBoolean isFirst = new AtomicBoolean(true);
             fields.stream().forEachOrdered(field -> {
                 try {
+
+                    if (isFirst.get() == true) {
+                        isFirst.set(false);
+                    } else {
+                        perhapsAppend(grokPatternBuilder);
+                    }
+
                     if (field.regex != null && field.name != null) {
-                        if (isFirst.get() == true) {
-                            isFirst.set(false);
-                        } else {
-                            perhapsAppend(grokPatternBuilder);
-                        }
                         grok.addPattern(field.name.toUpperCase(), field.regex);
                         grokPatternBuilder.append("%" + format("{%s:%s}", field.name.toUpperCase(),
                                 (field.garbage ? "UNWANTED" : field.name)));
@@ -80,6 +142,9 @@ public class Parser {
                 }
             });
             try {
+                if (uglyDebug) {
+                    System.out.println("Grok pattern:" + grokPatternBuilder);
+                }
                 grok.compile(grokPatternBuilder.toString());
             } catch (GrokException e) {
                 throw new RuntimeException(e);
@@ -99,27 +164,6 @@ public class Parser {
             }
         }
 
-        public Builder tab() {
-            return extract(regex().tab()).skip();
-        }
-
-        public Builder space() {
-            return extract(regex().space()).skip();
-        }
-
-        public Builder grok(String s) {
-            return extract(s).into(null);
-        }
-
-        public Builder withTabSeparation() {
-            this.tabSeparated = true;
-            return this;
-        }
-
-        public Builder autoSpaceSeparation() {
-            this.spaceSeparated = true;
-            return this;
-        }
 
         class Field {
 
@@ -136,7 +180,7 @@ public class Parser {
                 return Builder.this;
             }
 
-            public Parser.Builder skip() {
+            private Parser.Builder skip() {
                 this.name = Long.toHexString(Double.doubleToLongBits(Math.random()));;
                 this.garbage = true;
                 return Builder.this;

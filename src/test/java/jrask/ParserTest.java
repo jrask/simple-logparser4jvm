@@ -3,13 +3,14 @@ package jrask;
 import oi.thekraken.grok.api.Grok;
 import oi.thekraken.grok.api.Match;
 import oi.thekraken.grok.api.exception.GrokException;
+import org.junit.Assert;
 import org.junit.Test;
 import ru.lanwen.verbalregex.VerbalExpression;
 
 import static ru.lanwen.verbalregex.VerbalExpression.regex;
 
 
-public class VerbalExpressionWithGrok {
+public class ParserTest {
 
     String logLine = "3\t4\t1\thttp://localhost:20001\t1\t63528800\t0\t63528800\t1000000000\t0\t63528800\tSTR1";
 
@@ -39,11 +40,13 @@ public class VerbalExpressionWithGrok {
                 .extract(host).into("host")
                 .build();
 
-        System.out.println(parser.parse(logLine));
+        System.out.println(parser.parseAsJson(logLine));
     }
 
     @Test
-    public void testWithParserAutoTabSeparated(){
+    public void testWithParserAutoTabSeparated() throws GrokException {
+
+
         Parser parser = Parser.builder()
                 .withTabSeparation()
                 .extract(digits).into("digit1")
@@ -56,11 +59,45 @@ public class VerbalExpressionWithGrok {
                 .extract(digits).into("digit5")
                 .extract(digits).into("digit6")
                 .extract(range).into("range4")
-                .extract(digits).skip()
+                .skip(digits)
                 .extract(str).into("str")
                 .build();
 
-        System.out.println(parser.parse(logLine));
+        System.out.println(parser.parseAsJson(logLine));
+
+        String expected = "{\"digit1\":3,\"digit2\":4,\"digit4\":63528800,\"digit5\":63528800,\"digit6\":1000000000," +
+                "\"host\":\"http://localhost:20001\",\"range1\":1,\"range2\":1,\"range3\":0,\"range4\":0,\"str\":\"STR1\"}";
+
+        Assert.assertEquals(expected, parser.parseAsJson(logLine));
+    }
+
+
+    @Test
+    public void mixAndMatch() throws GrokException {
+        Grok grok = Grok.create("src/main/resources/patterns/patterns");
+        Parser parser = Parser.builder(grok)
+                .extract("((?:\\d)+)").into("digit1")
+                .tab()
+                .extract(digits).into("digit2")
+                .tab()
+                .skip(range)
+                .tab()
+                .grok("%{URI:host}")
+                .build();
+
+        System.out.println(parser.parseAsJson(logLine));
+    }
+
+    @Test
+    public void testWithCoreGrok() throws GrokException {
+        String expression = "%{NUMBER:digit1}\t%{NUMBER:digit2}\t%{NUMBER:digit3}\t%{URI}\t%{NUMBER:digit4}\t%{NUMBER:digit5}" +
+                "\t%{NUMBER:digit6}\t%{NUMBER:digit7}\t%{NUMBER:digit8}\t%{NUMBER:digit9}\t%{NUMBER:digit10}\t%{WORD:str}";
+        Grok grok = Grok.create("src/main/resources/patterns/patterns");
+        grok.compile(expression);
+        Match match = grok.match(logLine);
+        match.captures();
+
+        System.out.println(match.toJson(true));
     }
 
     /**
