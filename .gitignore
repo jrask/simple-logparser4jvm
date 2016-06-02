@@ -2,7 +2,5 @@
 
 .gradle
 .idea
-gradle
-gradlew*
 *.iml
 build
